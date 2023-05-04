@@ -5,6 +5,7 @@ using DataLayer.Entities;
 using DataLayer.Enums;
 using DataLayer.Mapping;
 using Infrastructure.Exceptions;
+using DataLayer.Repositories;
 
 namespace Core.Services
 {
@@ -12,33 +13,68 @@ namespace Core.Services
     {
         private readonly UnitOfWork unitOfWork;
 
-        public StudentService(UnitOfWork unitOfWork)
+        private AuthorizationService authService { get; set; }
+
+        public StudentService(UnitOfWork unitOfWork, AuthorizationService authService)
         {
             this.unitOfWork = unitOfWork;
+            this.authService = authService;
         }
 
-        public StudentAddDto AddStudent(StudentAddDto payload)
+        public void Register(RegisterDto registerData)
         {
-            if (payload == null) return null;
+            if (registerData == null)
+            {
+                return;
+            }
 
             var existingClass = unitOfWork.Classes.GetById(payload.ClassId);
             if (existingClass == null)
                 throw new ResourceMissingException($"Class with id {payload.ClassId} doesn't exist");
+            var hashedPassword = authService.HashPassword(registerData.Password);
 
-            var newStudent = new Student
+            var student = new Student
             {
-                FirstName = payload.FirstName,
-                LastName = payload.LastName,
-                DateOfBirth = payload.DateOfBirth,
-                Address = payload.Address,
-
-                ClassId = existingClass.Id
+                FirstName = registerData.FirstName,
+                LastName = registerData.LastName,
+                Email = registerData.Email,
+                PasswordHash = hashedPassword,
+                ClassId = registerData.ClassId
             };
 
-            unitOfWork.Students.Insert(newStudent);
+            unitOfWork.Students.Insert(student);
             unitOfWork.SaveChanges();
+        }
 
-            return payload;
+        public string Validate(LoginDto payload)
+        {
+            var student = unitOfWork.Students.GetByEmail(payload.Email);
+
+            var passwordFine = authService.VerifyHashedPassword(student.PasswordHash, payload.Password);
+
+            if (passwordFine)
+            {
+                var role = GetRole(student);
+
+                return authService.GetToken(student, role);
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
+        public string GetRole(Student student)
+        {
+            if(student.Email == "alexandra.donici@cst.ro")
+            {
+                return "Teacher";
+            }
+            else
+            {
+                return "Student";
+            }
         }
 
         public List<Student> GetAll()
@@ -76,7 +112,7 @@ namespace Core.Services
         public GradesByStudent GetGradesById(int studentId, CourseType courseType)
         {
             var studentWithGrades = unitOfWork.Students.GetByIdWithGrades(studentId, courseType);
-            
+
             var result = new GradesByStudent(studentWithGrades);
 
             return result;

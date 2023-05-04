@@ -22,6 +22,7 @@ namespace Project.Settings
         private static void AddServices(IServiceCollection services)
         {
             services.AddScoped<StudentService>();
+            services.AddScoped<AuthorizationService>();
             services.AddScoped<ClassService>();
         }
 
