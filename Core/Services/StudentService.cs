@@ -28,9 +28,9 @@ namespace Core.Services
                 return;
             }
 
-            var existingClass = unitOfWork.Classes.GetById(payload.ClassId);
+            var existingClass = unitOfWork.Classes.GetById(registerData.ClassId);
             if (existingClass == null)
-                throw new ResourceMissingException($"Class with id {payload.ClassId} doesn't exist");
+                throw new ResourceMissingException($"Class with id {registerData.ClassId} doesn't exist");
             var hashedPassword = authService.HashPassword(registerData.Password);
 
             var student = new Student
