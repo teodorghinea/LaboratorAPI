@@ -2,6 +2,7 @@
 using Core.Services;
 using DataLayer;
 using Microsoft.EntityFrameworkCore;
+using Project.Workers;
 
 namespace Project.Settings
 {
@@ -14,23 +15,32 @@ namespace Project.Settings
             applicationBuilder.Services.AddSwaggerGen();
 
             applicationBuilder.Services.AddDbContext<AppDbContext>();
+            applicationBuilder.Services.AddTransient<AppDbContext>();
 
             AddRepositories(applicationBuilder.Services);
             AddServices(applicationBuilder.Services);
+            AddWorkers(applicationBuilder.Services);
         }
 
         private static void AddServices(IServiceCollection services)
         {
-            services.AddScoped<StudentService>();
-            services.AddScoped<AuthorizationService>();
-            services.AddScoped<ClassService>();
+            services.AddTransient<StudentService>();
+            services.AddTransient<AuthorizationService>();
+            services.AddTransient<ClassService>();
+
+            services.AddSingleton<BackgroundWorkerService>();
         }
 
         private static void AddRepositories(IServiceCollection services)
         {
-            services.AddScoped<StudentsRepository>();
-            services.AddScoped<ClassRepository>();
-            services.AddScoped<UnitOfWork>();
+            services.AddTransient<StudentsRepository>();
+            services.AddTransient<ClassRepository>();
+            services.AddTransient<UnitOfWork>();
+        }
+
+        public static void AddWorkers(this IServiceCollection services)
+        {
+            services.AddHostedService<TestBackgroundWorker>();
         }
 
     }

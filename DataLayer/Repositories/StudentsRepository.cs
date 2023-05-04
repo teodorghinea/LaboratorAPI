@@ -63,5 +63,10 @@ namespace DataLayer.Repositories
         {
             return dbContext.Students.FirstOrDefault(s => s.Email == email);
         }
+
+        public int CountAllStudents()
+        {
+            return dbContext.Students.Count();
+        }
     }
 }

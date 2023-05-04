@@ -133,5 +133,12 @@ namespace Core.Services
 
             return results;
         }
+
+        public int CountAllStudents()
+        {
+            var result = unitOfWork.Students.CountAllStudents();
+                
+            return result;
+        }
     }
 }
