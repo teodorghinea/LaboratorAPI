@@ -11,5 +11,10 @@ public class Student : BaseEntity
     public List<Grade> Grades { get; set; }
 
     public string Address { get; set; }
+
+
+    public string Email { get; set; }
+
+    public string PasswordHash { get; set; }
 }
 

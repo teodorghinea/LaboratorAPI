@@ -58,5 +58,15 @@ namespace DataLayer.Repositories
 
             return results;
         }
+
+        public Student GetByEmail(string email)
+        {
+            return dbContext.Students.FirstOrDefault(s => s.Email == email);
+        }
+
+        public int CountAllStudents()
+        {
+            return dbContext.Students.Count();
+        }
     }
 }

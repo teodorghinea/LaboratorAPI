@@ -2,12 +2,15 @@
 using Core.Services;
 using DataLayer.Dtos;
 using DataLayer.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Project.Controllers
 {
     [ApiController]
     [Route("api/students")]
+    [Authorize]
     public class StudentsController : ControllerBase
     {
         private StudentService studentService { get; set; }
@@ -18,17 +21,56 @@ namespace Project.Controllers
             this.studentService = studentService;
         }
 
-        [HttpPost("/add")]
-        public IActionResult Add(StudentAddDto payload)
+        [HttpPost("/register")]
+        [AllowAnonymous]
+        public IActionResult Register(RegisterDto payload)
         {
-            var result = studentService.AddStudent(payload);
+            studentService.Register(payload);
+            return Ok();
+        }
 
-            if (result == null)
+        [HttpPost("/login")]
+        [AllowAnonymous]
+        public IActionResult Login(LoginDto payload)
+        {
+            var jwtToken = studentService.Validate(payload);
+
+            return Ok(new {token = jwtToken});
+        }
+
+        [HttpGet("test-auth")]
+        public IActionResult TestLogin()
+        {
+
+            ClaimsPrincipal user = User;
+
+            var result = "";
+
+            foreach(var claim in user.Claims)
             {
-                return BadRequest("Student cannot be added");
+               result += claim.Type + " : " + claim.Value + "\n";
             }
 
+            
+
+            var hasRole_user = user.IsInRole("User");
+            var hasRole_teacher = user.IsInRole("Teacher");
+
             return Ok(result);
+        }
+
+        [HttpGet("students-only")]
+        [Authorize(Roles="Student")]
+        public ActionResult<string> HelloStudents()
+        {
+            return Ok("Hello students!");
+        }
+
+        [HttpGet("teacher-only")]
+        [Authorize(Roles = "Teacher")]
+        public ActionResult<string> HelloTeachers()
+        {
+            return Ok("Hello teachers!");
         }
 
 
